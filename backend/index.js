@@ -18,10 +18,10 @@ const users = [];
 app.get('/auth', (req, res) => {
     try {
       const token = req.cookies.token;
-      if (!token) throw new Error('Unauthenticated');
+      if (!token) throw new Error('未認証');
   
       jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        if (err) throw new Error('Invalid token');
+        if (err) throw new Error('無効なトークン');
         res.json({ token: token, user: { id: user.id, email: user.email } });
       });
     } catch (error) {
@@ -35,14 +35,14 @@ app.post('/signup', async (req, res) => {
     const user = { id: uuidv4(), email: req.body.email, password: hashedPassword };
     users.push(user);
     console.log(users);
-    res.status(201).json({ message: 'User created successfully.' });
+    res.status(201).json({ message: 'ユーザーが正常に作成されました' });
 });
 
 
 app.post('/login', async (req, res) => {
     const user = users.find(user => user.email === req.body.email);
     if (user == null) {
-        return res.status(400).send('Cannot find user');
+        return res.status(400).send('ユーザーが見つからない');
     }
     try {
         if(await bcrypt.compare(req.body.password, user.password)) {
@@ -51,7 +51,7 @@ app.post('/login', async (req, res) => {
             res.cookie('token', token, { httpOnly: true });
             res.json({ token: token, user: { id: user.id, email: user.email } });
         } else {
-            res.send('Not Allowed');
+            res.send('認証失敗');
         }
     } catch {
         res.status(500).send();
@@ -60,7 +60,7 @@ app.post('/login', async (req, res) => {
 
 app.post('/logout', (req, res) => {
     res.clearCookie('token');
-    res.status(200).json({ message: 'Logged out successfully.' });
+    res.status(200).json({ message: 'ログアウト成功' });
 });
 
 

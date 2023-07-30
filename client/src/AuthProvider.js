@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       try {
         const response = await fetch('http://localhost:5000/auth', { credentials: 'include' });
-        if (!response.ok) throw new Error('Not authenticated');
+        if (!response.ok) throw new Error('認証されてない');
 
         const data = await response.json();
         login(data.token, data.user);
