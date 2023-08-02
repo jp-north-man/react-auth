@@ -1,9 +1,10 @@
 import React, { useContext } from "react";
 import { AuthContext } from "../AuthProvider";
+import { useNavigate } from 'react-router-dom';
 
-const Header = () => {
+export const Header = () => {
   const { auth, logout } = useContext(AuthContext);
-
+  const Navigate = useNavigate();
   console.log('Header rendering', auth);
 
   const handleLoginClick = async () => {
@@ -24,18 +25,27 @@ const Header = () => {
         console.error(error.message);
       }
     } else {
-      window.location.href = '/login';
+      Navigate('/login');
     }
   };
 
   const handleSignUpClick = () => {
-    window.location.href = '/signup';
+    Navigate('/signup');
+  };
+
+  const mypageClick = () => {
+    Navigate('/mypage');
   };
 
   return (
     <header className="bg-white bg-opacity-50 text-black h-14 px-4 border-b border-gray-200 flex items-center justify-between">
       <h1>Header</h1>
       <div>
+        {auth.isLoggedIn && (
+          <button onClick={mypageClick} className="px-4 py-2 rounded bg-pink-500 text-white mr-2">
+            マイページ
+          </button>
+        )}
         {!auth.isLoggedIn && (
           <button onClick={handleSignUpClick} className="px-4 py-2 rounded bg-green-500 text-white mr-2">
             サインイン
@@ -49,5 +59,3 @@ const Header = () => {
     </header>
   );
 };
-
-export default Header;

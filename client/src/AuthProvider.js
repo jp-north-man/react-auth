@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState } from "react";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -6,27 +6,13 @@ export const AuthProvider = ({ children }) => {
 
   const login = (token, user) => {
     setAuth({isLoggedIn: true, user, token});
+    console.log(auth);
   };
 
   const logout = () => {
     setAuth({isLoggedIn: false, user: null, token: null});
+    console.log(auth);
   };
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/auth', { credentials: 'include' });
-        if (!response.ok) throw new Error('認証されてない');
-
-        const data = await response.json();
-        login(data.token, data.user);
-      } catch (error) {
-        console.error(error.message);
-      }
-    };
-
-    checkAuth();
-  }, []);
 
   return (
     <AuthContext.Provider value={{ auth, login, logout }}>
