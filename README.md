@@ -11,9 +11,9 @@ reactとexpressを使った認証機能です。
 <img src="https://github.com/jp-north-man/react-auth/blob/main/client/public/2.png" width="350px" />   
    
    
-serverの/signupに入力内容POST      
-client/src/pages/SignupForm.jsの一部      
+serverの/signupに入力内容POST        
 ```js
+//client/src/pages/SignupForm.jsの一部 
 const handleSubmit = async (e) => {
   e.preventDefault();
   console.log(email);
