@@ -7,7 +7,7 @@ const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
-  const { auth, login } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,15 +18,11 @@ const LoginForm = () => {
         body: JSON.stringify({ email, password }),
         credentials: 'include',
       });
-
       if (!response.ok) {
         throw new Error('ログインに失敗しました。');
       }
-
       const data = await response.json();
-      console.log(data.token, data.user)
       login(data.token, data.user);
-      console.log(auth);
       setError(null);
       Navigate('/');
     } catch (error) {

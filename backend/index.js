@@ -15,21 +15,6 @@ const port = 5000;
 
 const users = [];
 
-app.get('/auth', (req, res) => {
-    try {
-      const token = req.cookies.token;
-      if (!token) throw new Error('未認証');
-  
-      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        if (err) throw new Error('無効なトークン');
-        res.json({ token: token, user: { id: user.id, email: user.email } });
-      });
-    } catch (error) {
-      res.status(401).send(error.message);
-    }
-  });
-  
-
 app.post('/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const user = { id: uuidv4(), email: req.body.email, password: hashedPassword };

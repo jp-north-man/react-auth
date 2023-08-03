@@ -19,12 +19,9 @@ const SignupForm = () => {
         if (!response.ok) {
           throw new Error('サインアップに失敗した');
         }
-
         setEmail('');
         setPassword('');
-        setError(null);  // サインアップが成功したら、既存のエラーをクリア
-
-        // ログインページにリダイレクト
+        setError(null);
         window.location.href = '/login';
     } catch (error) {
         setError(error.message);

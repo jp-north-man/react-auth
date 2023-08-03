@@ -1,8 +1,46 @@
-# auth memo
-reactとexpressを使った認証機能のメモです。(自分用)   
+# auth memo (自分用)   
+reactとexpressを使った認証機能です。   
+ログイン状態でヘッダーの表示ボダンを変更します。   
 
-express, backend/index.js   
+## ユーザー登録   
+ログイン前はサインインとログインボタンがあります。
+![image1](https://github.com/jp-north-man/react-auth/blob/main/client/public/1.png)
+   
+ヘッダーのサインインボタンを押して、サインイン情報を入力してsubmitを押します。
+![image2](https://github.com/jp-north-man/react-auth/blob/main/client/public/2.png)
+   
+serverの/signupに入力内容POST   
+client/src/pages/SignupForm.jsの一部   
+```js
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  console.log(email);
+  try {
+    const response = await fetch('http://localhost:5000/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('サインアップに失敗した');
+    }
+    setEmail('');
+    setPassword('');
+    setError(null);
+    window.location.href = '/login';
+  } catch (error) {
+    setError(error.message);
+  }
+}
 ```
+
+  
+clientからsignupのリクエストデータを受け取る。
+パスワードのbcryptハッシュ化と一意のIDを作り、仮でusers配列に保存します。(本来DBに登録)   
+express, backend/index.jsの一部 
+```js
 const express = require('express');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
@@ -20,30 +58,56 @@ const port = 5000;
 
 const users = [];
 
-app.get('/auth', (req, res) => {
-    try {
-      const token = req.cookies.token;
-      if (!token) throw new Error('未認証');
-  
-      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        if (err) throw new Error('無効なトークン');
-        res.json({ token: token, user: { id: user.id, email: user.email } });
-      });
-    } catch (error) {
-      res.status(401).send(error.message);
-    }
-  });
-  
-
 app.post('/signup', async (req, res) => {
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    const user = { id: uuidv4(), email: req.body.email, password: hashedPassword };
-    users.push(user);
-    console.log(users);
-    res.status(201).json({ message: 'ユーザーが正常に作成されました' });
+  const hashedPassword = await bcrypt.hash(req.body.password, 10);
+  const user = { id: uuidv4(), email: req.body.email, password: hashedPassword };
+  users.push(user);
+  console.log(users);
+  res.status(201).json({ message: 'ユーザーが正常に作成されました' });
 });
 
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}/`);
+});
 
+module.exports = app;
+```
+
+## ログイン
+サインイン後ヘッダーのログインボタンから/loginページへ
+![image3](https://github.com/jp-north-man/react-auth/blob/main/client/public/3.png)
+
+serverの/loginに入力内容POST   
+serverで作成したtokenとuserデータをAuthContextのloginに入れます。
+client/src/pages/LoginForm.jsの一部
+```js
+const { login } = useContext(AuthContext);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const response = await fetch('http://localhost:5000/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      throw new Error('ログインに失敗しました。');
+    }
+    const data = await response.json();
+    login(data.token, data.user);
+    setError(null);
+    Navigate('/');
+  } catch (error) {
+      setError(error.message);
+  }
+}
+```
+
+server側ではuser情報を検索、tokenを作成してcookieに保存します。   
+tokenとuser情報をclientに返します。   
+express, backend/index.jsの一部
+```js
 app.post('/login', async (req, res) => {
     const user = users.find(user => user.email === req.body.email);
     if (user == null) {
@@ -62,27 +126,11 @@ app.post('/login', async (req, res) => {
         res.status(500).send();
     }
 });
-
-app.post('/logout', (req, res) => {
-    res.clearCookie('token');
-    res.status(200).json({ message: 'ログアウト成功' });
-});
-
-
-app.get('/', (req, res) => {
-    console.log('hello');
-});
-
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}/`);
-});
-
-module.exports = app;
-
 ```
 
+AuthContext   
 client/src/AuthProvider.js
-```
+```js
 import React, { createContext, useState } from "react";
 export const AuthContext = createContext();
 
@@ -106,144 +154,106 @@ export const AuthProvider = ({ children }) => {
   )
 };
 
+```
+
+App.jsで親コンポーネントとしてラップします。
+client/src/App.js
+```js
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import TopPage from "./pages/TopPage"
+import LoginForm from './pages/LoginForm';
+import SignupForm from './pages/SignupForm';
+import {AuthProvider} from "./AuthProvider";
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<TopPage />} />
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/signup" element={<SignupForm />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
+    
+  );
+}
+
+export default App;
 
 ```
 
-使用例
+## ログアウト
+ログイン後ヘッダーの表示されるボタンが切り替わります。
+![image4](https://github.com/jp-north-man/react-auth/blob/main/client/public/4.png)
 
+client/src/components/Header.jsの一部
+```js
+const { auth, logout } = useContext(AuthContext);
+return (
+  <header className="bg-white bg-opacity-50 text-black h-14 px-4 border-b border-gray-200 flex items-center justify-between">
+    <h1>Header</h1>
+    <div>
+      {!auth.isLoggedIn && (
+        <button onClick={handleSignUpClick} className="px-4 py-2 rounded bg-green-500 text-white mr-2">
+          サインイン
+        </button>
+      )}
+      <button onClick={handleLoginClick} className="px-4 py-2 rounded bg-blue-500 text-white">
+        {auth.isLoggedIn ? "ログアウト" : "ログイン"}
+      </button>
+    </div>
+  </header>
+);
 ```
-import React, { useState, useContext } from 'react';
-import { AuthContext } from '../AuthProvider';
-import { useNavigate  } from 'react-router-dom';
 
-const LoginForm = () => {
-  const Navigate  = useNavigate ();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
-  const { auth, login } = useContext(AuthContext);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ログアウトボタンを押してログアウトします。   
+isLoggedInがtrueならログアウト処理を行います。   
+client/src/components/Header.jsの一部
+```js
+const { auth, logout } = useContext(AuthContext);
+const handleLoginClick = async () => {
+  console.log('handleLoginClick', auth); 
+  if (auth.isLoggedIn) {
     try {
-      const response = await fetch('http://localhost:5000/login', {
+      const response = await fetch('http://localhost:5000/logout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
         credentials: 'include',
       });
 
       if (!response.ok) {
-        throw new Error('ログインに失敗しました。');
+        throw new Error('ログアウトに失敗しました。');
       }
 
-      const data = await response.json();
-      console.log(data.token, data.user)
-      login(data.token, data.user);
-      console.log(auth);
-      setError(null);
-      Navigate('/');
+      logout();
     } catch (error) {
-        setError(error.message);
+      console.error(error.message);
     }
+  } else {
+    Navigate('/login');
   }
-
-  return (
-    <div className='flex justify-center my-24'>
-      <div className='w-96'>
-        ログイン
-        <form onSubmit={handleSubmit}>
-          <div class="mb-6">
-            <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
-            <input type="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-              placeholder="name@flowbite.com" required value={email} onChange={(e) => setEmail(e.target.value)} 
-            />
-          </div>
-          <div class="mb-6">
-            <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your password</label>
-            <input type="password" id="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-              required value={password} onChange={(e) => setPassword(e.target.value)} />
-          </div>
-          <div class="flex items-start mb-6">
-            <div class="flex items-center h-5">
-              <input id="remember" type="checkbox" value="" class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800" required />
-            </div>
-            <label for="remember" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">利用規約など</label>
-          </div>
-          {error && <p>{error}</p>}
-          <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Submit</button>
-        </form>
-        <a href='/signup'>アカウントをお持ちでない方</a>
-      </div>
-    </div>
-        
-  );
 };
-
-export default LoginForm;
-
 ```
+server側ではCookieをクリアして、メッセージをクライアントへ返します。  
+express, backend/index.jsの一部
+```js
+app.post('/logout', (req, res) => {
+  res.clearCookie('token');
+  res.status(200).json({ message: 'ログアウト成功' });
+});
 ```
-import React, { useContext } from "react";
-import { AuthContext } from "../AuthProvider";
-import { useNavigate } from 'react-router-dom';
 
-export const Header = () => {
-  const { auth, logout } = useContext(AuthContext);
-  const Navigate = useNavigate();
-  console.log('Header rendering', auth);
+## 使用技術
+- フロントエンド
+  - react-router-dom 
+  - tailwind css
 
-  const handleLoginClick = async () => {
-    console.log('handleLoginClick', auth); 
-    if (auth.isLoggedIn) {
-      try {
-        const response = await fetch('http://localhost:5000/logout', {
-          method: 'POST',
-          credentials: 'include',
-        });
-
-        if (!response.ok) {
-          throw new Error('ログアウトに失敗しました。');
-        }
-
-        logout();
-      } catch (error) {
-        console.error(error.message);
-      }
-    } else {
-      Navigate('/login');
-    }
-  };
-
-  const handleSignUpClick = () => {
-    Navigate('/signup');
-  };
-
-  const mypageClick = () => {
-    Navigate('/mypage');
-  };
-
-  return (
-    <header className="bg-white bg-opacity-50 text-black h-14 px-4 border-b border-gray-200 flex items-center justify-between">
-      <h1>Header</h1>
-      <div>
-        {auth.isLoggedIn && (
-          <button onClick={mypageClick} className="px-4 py-2 rounded bg-pink-500 text-white mr-2">
-            マイページ
-          </button>
-        )}
-        {!auth.isLoggedIn && (
-          <button onClick={handleSignUpClick} className="px-4 py-2 rounded bg-green-500 text-white mr-2">
-            サインイン
-          </button>
-        )}
-        <button onClick={handleLoginClick} className="px-4 py-2 rounded bg-blue-500 text-white">
-          {auth.isLoggedIn ? "ログアウト" : "ログイン"}
-        </button>
-      </div>
-      
-    </header>
-  );
-};
-
-```
+- バックエンド
+  - Express
+  - jsonwebtoken 
+  - bcrypt
+  - cookie-parser
+  - uuid
+  - cors

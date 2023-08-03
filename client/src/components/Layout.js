@@ -1,7 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
-import Header from './Header';
-import Sidebar from './Sidebar';
+import { Header } from './Header';
 
 const Layout = ({ children, title, description }) => {
     return (
@@ -10,15 +9,9 @@ const Layout = ({ children, title, description }) => {
                 <title>{title}</title>
                 <meta name='description' content={description}></meta>
             </Helmet>
-            <div className='flex'>
-                <Sidebar/>
-                <div className='flex-grow'>
-                    <Header/>   
-                    <main className='p-2'>{children}</main>
-                </div>
-            
-            </div>
-            
+               
+            <Header/>   
+            <main className='p-2'>{children}</main>
         </>
     
     );
