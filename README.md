@@ -13,7 +13,7 @@ reactとexpressを使った認証機能です。
    
 serverの/signupに入力内容POST        
 ```js
-//client/src/pages/SignupForm.jsの一部 
+// client/src/pages/SignupForm.jsの一部 
 const handleSubmit = async (e) => {
   e.preventDefault();
   console.log(email);
@@ -40,9 +40,9 @@ const handleSubmit = async (e) => {
    
     
 clientからsignupのリクエストデータを受け取る。   
-パスワードのbcryptハッシュ化と一意のIDを作り、仮でusers配列に保存します。(本来DBに登録)      
-express, backend/index.jsの一部    
+パスワードのbcryptハッシュ化と一意のIDを作り、仮でusers配列に保存します。(本来DBに登録)   
 ```js
+// express, backend/index.jsの一部
 const express = require('express');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
@@ -83,8 +83,8 @@ module.exports = app;
    
 serverの/loginに入力内容POST   
 serverで作成したtokenとuserデータをAuthContextのloginに入れます。   
-client/src/pages/LoginForm.jsの一部   
 ```js
+// client/src/pages/LoginForm.jsの一部   
 const { login } = useContext(AuthContext);
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -111,8 +111,8 @@ const handleSubmit = async (e) => {
   
 server側ではuser情報を検索、tokenを作成してcookieに保存します。    
 tokenとuser情報をclientに返します。   
-express, backend/index.jsの一部   
 ```js
+// express, backend/index.jsの一部   
 app.post('/login', async (req, res) => {
     const user = users.find(user => user.email === req.body.email);
     if (user == null) {
@@ -135,8 +135,8 @@ app.post('/login', async (req, res) => {
    
 
 AuthContext   
-client/src/AuthProvider.js   
 ```js
+// client/src/AuthProvider.js   
 import React, { createContext, useState } from "react";
 export const AuthContext = createContext();
 
@@ -163,8 +163,8 @@ export const AuthProvider = ({ children }) => {
    
    
 App.jsで親コンポーネントとしてラップします。   
-client/src/App.js   
 ```js
+// client/src/App.js   
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import TopPage from "./pages/TopPage"
@@ -196,8 +196,8 @@ export default App;
 <img src="https://github.com/jp-north-man/react-auth/blob/main/client/public/4.png" width="350px" />   
    
    
-client/src/components/Header.jsの一部   
 ```js
+// client/src/components/Header.jsの一部   
 const { auth, logout } = useContext(AuthContext);
 return (
   <header className="bg-white bg-opacity-50 text-black h-14 px-4 border-b border-gray-200 flex items-center justify-between">
@@ -218,9 +218,9 @@ return (
    
 
 ログアウトボタンを押してログアウトします。   
-isLoggedInがtrueならログアウト処理を行います。      
-client/src/components/Header.jsの一部   
+isLoggedInがtrueならログアウト処理を行います。   
 ```js
+// client/src/components/Header.jsの一部   
 const { auth, logout } = useContext(AuthContext);
 const handleLoginClick = async () => {
   console.log('handleLoginClick', auth); 
@@ -247,8 +247,8 @@ const handleLoginClick = async () => {
    
 
 server側ではCookieをクリアして、メッセージをクライアントへ返します。  
-express, backend/index.jsの一部   
 ```js
+//  express, backend/index.jsの一部   
 app.post('/logout', (req, res) => {
   res.clearCookie('token');
   res.status(200).json({ message: 'ログアウト成功' });
