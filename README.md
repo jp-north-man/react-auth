@@ -4,7 +4,7 @@ reactとexpressを使った認証機能です。
 
 ## ユーザー登録   
 ログイン前はサインインとログインボタンがあります。
-![image1](https://github.com/jp-north-man/react-auth/blob/main/client/public/1.png)
+<img src="{https://github.com/jp-north-man/react-auth/blob/main/client/public/1.png}" width="350px" >
    
 ヘッダーのサインインボタンを押して、サインイン情報を入力してsubmitを押します。
 ![image2](https://github.com/jp-north-man/react-auth/blob/main/client/public/2.png)
