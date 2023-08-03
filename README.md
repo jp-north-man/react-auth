@@ -1,6 +1,23 @@
-# auth memo (自分用)   
-reactとexpressを使った認証機能です。   
-ログイン状態でヘッダーの表示ボダンを変更します。   
+# react 認証機能  
+reactとexpressを使った認証機能です。
+サインイン、ログイン、ログアウト機能があります。      
+ログイン状態でヘッダーの表示内容が変わります。  
+    
+   
+## 使用技術   
+- フロントエンド   
+  - react-router-dom
+  - tailwind css
+   
+- バックエンド
+  - Express
+  - jsonwebtoken 
+  - bcrypt
+  - cookie-parser
+  - uuid
+  - cors
+   
+
    
 ## ユーザー登録   
 ログイン前はサインインとログインボタンがあります。   
@@ -256,15 +273,3 @@ app.post('/logout', (req, res) => {
 ```
    
 
-## 使用技術   
-- フロントエンド   
-  - react-router-dom
-  - tailwind css
-   
-- バックエンド
-  - Express
-  - jsonwebtoken 
-  - bcrypt
-  - cookie-parser
-  - uuid
-  - cors
